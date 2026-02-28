@@ -18,7 +18,13 @@ interface BoardGridProps {
   placedPieces: Record<string, PlacedPieceView>;
   ghostPreview: GhostPreview | null;
   boardRef: (node: HTMLDivElement | null) => void;
-  onPointerDownPlacedCell: (pieceId: string, offset: Cell, pointerId: number) => void;
+  onPointerDownPlacedCell: (
+    pieceId: string,
+    offset: Cell,
+    pointerId: number,
+    clientX: number,
+    clientY: number,
+  ) => void;
 }
 
 function BoardGrid({
@@ -51,7 +57,7 @@ function BoardGrid({
   return (
     <section aria-label="Puzzle board" className="board-wrapper">
       <div
-        className="board-grid puzzle-surface"
+        className="board-grid"
         ref={boardRef}
         role="grid"
         style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
@@ -73,9 +79,7 @@ function BoardGrid({
                     return;
                   }
 
-                  event.preventDefault();
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  onPointerDownPlacedCell(placed.pieceId, placed.offset, event.pointerId);
+                  onPointerDownPlacedCell(placed.pieceId, placed.offset, event.pointerId, event.clientX, event.clientY);
                 }}
                 role="gridcell"
                 style={placed ? { backgroundColor: placed.color } : undefined}
