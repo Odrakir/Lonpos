@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createBoardFromAscii } from './data/board';
 import { PIECE_DEFS } from './data/pieces';
 import { canPlace, orientShape, type Cell } from './game/placement';
+import { solveBoard } from './solver';
+import { buildSolveInputFromUi, getOrientIndexForSolvedPlacement } from './solver/uiState';
 import BoardGrid from './ui/BoardGrid';
 import PieceBuilder from './ui/PieceBuilder';
 import PieceTray from './ui/PieceTray';
@@ -42,6 +44,8 @@ function App() {
     Object.fromEntries(PIECE_DEFS.map((piece) => [piece.id, 0])),
   );
   const [placedByPieceId, setPlacedByPieceId] = useState<Record<string, PlacedPieceState>>({});
+  const [isSolving, setIsSolving] = useState(false);
+  const [solveMessage, setSolveMessage] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [ghostPreview, setGhostPreview] = useState<{ cells: Cell[]; isValid: boolean } | null>(null);
   const boardElementRef = useRef<HTMLDivElement | null>(null);
@@ -171,10 +175,67 @@ function App() {
     };
   }, [dragState, handlePointerMove, handlePointerUp]);
 
+  const handleSolve = useCallback(async () => {
+    setSolveMessage(null);
+    setIsSolving(true);
+
+    await Promise.resolve();
+
+    const solveInput = buildSolveInputFromUi(board, placedByPieceId);
+
+    if ('error' in solveInput) {
+      setSolveMessage(solveInput.error);
+      setIsSolving(false);
+      return;
+    }
+
+    const result = solveBoard(board, solveInput.remainingPieces, {
+      prePlacedPieces: solveInput.prePlacedPieces,
+    });
+
+    if (!result.solved) {
+      setSolveMessage('No solution from the current state.');
+      setIsSolving(false);
+      return;
+    }
+
+    const nextPlacedByPieceId: Record<string, PlacedPieceState> = {};
+    const nextOrientByPieceId: Record<string, number> = {};
+
+    for (const solvedPiece of result.placedPieces) {
+      const piece = PIECE_DEFS.find((item) => item.id === solvedPiece.pieceId);
+      if (!piece) {
+        continue;
+      }
+
+      const anchor: Cell = [solvedPiece.anchor[0], solvedPiece.anchor[1]];
+      const cells = solvedPiece.cells.map(([row, column]) => [row, column] as Cell);
+      const orientIndex = getOrientIndexForSolvedPlacement(piece, anchor, cells);
+
+      nextPlacedByPieceId[solvedPiece.pieceId] = {
+        pieceId: solvedPiece.pieceId,
+        anchor,
+        cells,
+      };
+      nextOrientByPieceId[solvedPiece.pieceId] = orientIndex;
+    }
+
+    setPlacedByPieceId(nextPlacedByPieceId);
+    setOrientByPieceId((current) => ({ ...current, ...nextOrientByPieceId }));
+    setSolveMessage(null);
+    setIsSolving(false);
+  }, [board, placedByPieceId]);
+
   return (
     <main className="app">
       <h1>Lonpos Solver</h1>
       <p className="subtitle">Board loaded from ASCII input.</p>
+      <section className="app-controls">
+        <button className="solve-button" disabled={isSolving} onClick={() => void handleSolve()} type="button">
+          {isSolving ? 'Solving…' : 'Solve'}
+        </button>
+      </section>
+      {solveMessage ? <p className="solve-message" role="status">{solveMessage}</p> : null}
       <section className="board-layout">
         <BoardGrid
           board={board}

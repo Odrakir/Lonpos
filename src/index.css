@@ -32,6 +32,33 @@ h1 {
   color: #4b5563;
 }
 
+.app-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.solve-button {
+  border: 1px solid #0284c7;
+  background: #0ea5e9;
+  color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.solve-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.solve-message {
+  margin: 0;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 .board-wrapper {
   display: grid;
   justify-items: center;
