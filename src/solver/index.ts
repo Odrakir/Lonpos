@@ -1,5 +1,6 @@
 import type { Board } from '../data/board';
 import type { Piece } from '../data/pieces';
+import { canPlace, normalizeShape, type Cell } from '../game/placement';
 
 export interface PlacedPiece {
   pieceId: string;
@@ -24,8 +25,6 @@ export interface SolveResult {
   placedPieces: PlacedPiece[];
 }
 
-type Cell = [row: number, column: number];
-
 interface Orientation {
   rotation: number;
   shape: Cell[];
@@ -33,15 +32,6 @@ interface Orientation {
 
 function rotate90Clockwise(cell: Cell): Cell {
   return [cell[1], -cell[0]];
-}
-
-function normalizeShape(shape: Cell[]): Cell[] {
-  const minRow = Math.min(...shape.map(([row]) => row));
-  const minColumn = Math.min(...shape.map(([, column]) => column));
-
-  return shape
-    .map(([row, column]) => [row - minRow, column - minColumn] as Cell)
-    .sort(([aRow, aColumn], [bRow, bColumn]) => aRow - bRow || aColumn - bColumn);
 }
 
 function getOrientations(piece: Piece): Orientation[] {
@@ -82,10 +72,6 @@ function isRectangular(board: Board): boolean {
 
   const width = board[0].length;
   return width > 0 && board.every((row) => row.length === width);
-}
-
-function inBounds(row: number, column: number, rows: number, columns: number): boolean {
-  return row >= 0 && row < rows && column >= 0 && column < columns;
 }
 
 export function solveBoard(
@@ -129,7 +115,14 @@ export function solveBoard(
     );
 
     for (const [row, column] of absoluteCells) {
-      if (!inBounds(row, column, rows, columns) || !allowedMask[row][column] || occupied[row][column]) {
+      if (
+        row < 0
+        || row >= rows
+        || column < 0
+        || column >= columns
+        || !allowedMask[row][column]
+        || occupied[row][column]
+      ) {
         return { solved: false, board: boardMask, placedPieces: [] };
       }
     }
@@ -165,18 +158,6 @@ export function solveBoard(
     return null;
   }
 
-  function canPlace(shape: Cell[], anchor: Cell): Cell[] | null {
-    const absoluteCells = shape.map(([row, column]) => [anchor[0] + row, anchor[1] + column] as Cell);
-
-    for (const [row, column] of absoluteCells) {
-      if (!inBounds(row, column, rows, columns) || !allowedMask[row][column] || occupied[row][column]) {
-        return null;
-      }
-    }
-
-    return absoluteCells;
-  }
-
   function backtrack(
     remaining: Array<{ piece: Piece; orientations: Orientation[] }>,
     occupiedCount: number,
@@ -206,7 +187,7 @@ export function solveBoard(
           }
           triedAnchors.add(anchorKey);
 
-          const absoluteCells = canPlace(orientation.shape, anchor);
+          const absoluteCells = canPlace(boardMask, occupied, orientation.shape, anchor);
 
           if (!absoluteCells) {
             continue;
