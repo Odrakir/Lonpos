@@ -81,3 +81,5 @@ export const pieces: Piece[] = [
     shape: cellsFromAscii(['..#..', '.###.', '###..', '.###.', '.###.', '..###', '.#.#.']),
   },
 ];
+
+export const PIECE_DEFS = pieces;

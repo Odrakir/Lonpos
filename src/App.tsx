@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { createBoardFromAscii } from './data/board';
 import BoardGrid from './ui/BoardGrid';
 import PieceBuilder from './ui/PieceBuilder';
+import PieceTray from './ui/PieceTray';
 
 const BOARD_ASCII = `
 ..#.....#..#.....#..
@@ -32,7 +33,10 @@ function App() {
     <main className="app">
       <h1>Lonpos Solver</h1>
       <p className="subtitle">Board loaded from ASCII input.</p>
-      <BoardGrid board={board} />
+      <section className="board-layout">
+        <BoardGrid board={board} />
+        <PieceTray />
+      </section>
 
       {isBuilderGateEnabled ? (
         <section className="builder-toggle">

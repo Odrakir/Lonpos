@@ -145,3 +145,70 @@ h1 {
   width: 100%;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+.board-layout {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.piece-tray {
+  width: min(92vw, 760px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.piece-preview {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.piece-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.piece-preview-header button {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.piece-preview-grid {
+  display: grid;
+  gap: 1px;
+  width: max-content;
+}
+
+.piece-preview-cell {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 1px;
+}
+
+
+@media (min-width: 1100px) {
+  .board-layout {
+    grid-template-columns: auto minmax(260px, 340px);
+    align-items: start;
+  }
+
+  .piece-tray {
+    width: auto;
+    max-width: 340px;
+    max-height: 78vh;
+    overflow: auto;
+  }
+}
