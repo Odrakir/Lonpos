@@ -231,6 +231,12 @@ h1 {
   font-size: 0.85rem;
 }
 
+
+.piece-preview-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
 .piece-preview-header button {
   border: 1px solid #cbd5e1;
   background: #f8fafc;

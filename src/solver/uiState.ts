@@ -1,5 +1,5 @@
 import { PIECE_DEFS, type Piece } from '../data/pieces';
-import { canPlace, normalizeShape, orientShape, type Cell } from '../game/placement';
+import { canPlace, getOrientKey, getShapeOrientations, type Cell } from '../game/placement';
 import type { Board } from '../data/board';
 import type { PrePlacedPiece } from './index';
 
@@ -18,30 +18,29 @@ export interface SolveInputError {
   error: string;
 }
 
-function cellsKey(cells: Cell[]): string {
-  return normalizeShape(cells).map(([row, column]) => `${row},${column}`).join('|');
-}
-
-function getOrientationIndexByKey(piece: Piece): Map<string, number> {
+function getOrientationByKey(piece: Piece): Map<string, number> {
   const orientationByKey = new Map<string, number>();
+  const orientations = getShapeOrientations(piece.shape);
 
-  for (let orientIndex = 0; orientIndex < 4; orientIndex += 1) {
-    const key = cellsKey(orientShape(piece.shape, orientIndex));
-
-    if (!orientationByKey.has(key)) {
-      orientationByKey.set(key, orientIndex);
-    }
+  for (let orientIndex = 0; orientIndex < orientations.length; orientIndex += 1) {
+    orientationByKey.set(orientations[orientIndex].orientKey, orientIndex);
   }
 
   return orientationByKey;
 }
 
-function getOrientIndexFromPlacement(piece: Piece, placement: UiPlacedPiece): number | null {
+function getOrientFromPlacement(piece: Piece, placement: UiPlacedPiece): { orientIndex: number; orientKey: string } | null {
   const relativeCells = placement.cells.map(
     ([row, column]) => [row - placement.anchor[0], column - placement.anchor[1]] as Cell,
   );
-  const key = cellsKey(relativeCells);
-  return getOrientationIndexByKey(piece).get(key) ?? null;
+  const orientKey = getOrientKey(relativeCells);
+  const orientIndex = getOrientationByKey(piece).get(orientKey);
+
+  if (orientIndex === undefined) {
+    return null;
+  }
+
+  return { orientIndex, orientKey };
 }
 
 export function buildSolveInputFromUi(
@@ -60,13 +59,13 @@ export function buildSolveInputFromUi(
       return { error: 'Current placement is invalid.' };
     }
 
-    const orientIndex = getOrientIndexFromPlacement(piece, placedPiece);
+    const orientation = getOrientFromPlacement(piece, placedPiece);
 
-    if (orientIndex === null) {
+    if (!orientation) {
       return { error: 'Current placement is invalid.' };
     }
 
-    const orientedShape = orientShape(piece.shape, orientIndex);
+    const orientedShape = getShapeOrientations(piece.shape)[orientation.orientIndex]?.cells ?? [];
     const validatedCells = canPlace(board, occupied, orientedShape, placedPiece.anchor);
 
     if (!validatedCells) {
@@ -80,7 +79,8 @@ export function buildSolveInputFromUi(
     prePlacedPieces.push({
       piece,
       anchor: placedPiece.anchor,
-      rotation: orientIndex,
+      orientIndex: orientation.orientIndex,
+      orientKey: orientation.orientKey,
     });
   }
 
@@ -95,6 +95,6 @@ export function buildSolveInputFromUi(
 
 export function getOrientIndexForSolvedPlacement(piece: Piece, anchor: Cell, cells: Cell[]): number {
   const relativeCells = cells.map(([row, column]) => [row - anchor[0], column - anchor[1]] as Cell);
-  const key = cellsKey(relativeCells);
-  return getOrientationIndexByKey(piece).get(key) ?? 0;
+  const orientKey = getOrientKey(relativeCells);
+  return getOrientationByKey(piece).get(orientKey) ?? 0;
 }

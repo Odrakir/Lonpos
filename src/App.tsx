@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createBoardFromAscii } from './data/board';
 import { PIECE_DEFS } from './data/pieces';
-import { canPlace, orientShape, type Cell } from './game/placement';
+import { canPlace, flipShape, getOrientKey, getShapeOrientations, orientShape, type Cell } from './game/placement';
 import { solveBoard } from './solver';
 import { buildSolveInputFromUi, getOrientIndexForSolvedPlacement } from './solver/uiState';
 import BoardGrid from './ui/BoardGrid';
@@ -226,6 +226,52 @@ function App() {
     setIsSolving(false);
   }, [board, placedByPieceId]);
 
+
+
+  const setPieceOrientationByKey = useCallback((pieceId: string, orientKey: string) => {
+    const piece = PIECE_DEFS.find((item) => item.id === pieceId);
+    if (!piece) {
+      return;
+    }
+
+    const orientations = getShapeOrientations(piece.shape);
+    const orientIndex = orientations.findIndex((orientation) => orientation.orientKey === orientKey);
+
+    if (orientIndex < 0) {
+      return;
+    }
+
+    setOrientByPieceId((current) => ({
+      ...current,
+      [pieceId]: orientIndex,
+    }));
+  }, []);
+
+  const handleRotatePiece = useCallback((pieceId: string) => {
+    const piece = PIECE_DEFS.find((item) => item.id === pieceId);
+    if (!piece) {
+      return;
+    }
+
+    const orientations = getShapeOrientations(piece.shape);
+
+    setOrientByPieceId((current) => ({
+      ...current,
+      [pieceId]: ((current[pieceId] ?? 0) + 1) % orientations.length,
+    }));
+  }, []);
+
+  const handleFlipPiece = useCallback((pieceId: string) => {
+    const piece = PIECE_DEFS.find((item) => item.id === pieceId);
+    if (!piece) {
+      return;
+    }
+
+    const currentShape = orientedShapes[pieceId] ?? orientShape(piece.shape, 0);
+    const flippedShape = flipShape(currentShape);
+    const orientKey = getOrientKey(flippedShape);
+    setPieceOrientationByKey(pieceId, orientKey);
+  }, [orientedShapes, setPieceOrientationByKey]);
   return (
     <main className="app">
       <h1>Lonpos Solver</h1>
@@ -249,12 +295,8 @@ function App() {
           placedPieces={placedByPieceId}
         />
         <PieceTray
-          onRotatePiece={(pieceId) =>
-            setOrientByPieceId((current) => ({
-              ...current,
-              [pieceId]: ((current[pieceId] ?? 0) + 1) % 4,
-            }))
-          }
+          onFlipPiece={handleFlipPiece}
+          onRotatePiece={handleRotatePiece}
           onStartDragFromTray={(pieceId, offset, pointerId) => {
             startDrag(pieceId, offset, pointerId, 'tray');
           }}
