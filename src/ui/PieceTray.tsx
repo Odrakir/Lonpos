@@ -56,6 +56,7 @@ function PieceTray({
                     }
 
                     event.preventDefault();
+                    event.currentTarget.setPointerCapture(event.pointerId);
                     onStartDragFromTray(piece.id, [row, column], event.pointerId);
                   }}
                   style={{
