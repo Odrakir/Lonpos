@@ -36,6 +36,7 @@ h1 {
 .app-controls {
   display: flex;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .solve-button {
@@ -52,6 +53,17 @@ h1 {
 .solve-button:disabled {
   opacity: 0.7;
   cursor: default;
+}
+
+.clear-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 0.5rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .solve-message {

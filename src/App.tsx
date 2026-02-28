@@ -284,6 +284,13 @@ function App() {
     setIsSolving(false);
   }, [board, placedByPieceId]);
 
+  const handleClearBoard = useCallback(() => {
+    setPlacedByPieceId({});
+    setGhostPreview(null);
+    setDragState(null);
+    setSolveMessage(null);
+  }, []);
+
 
 
   const setPieceOrientationByKey = useCallback((pieceId: string, orientKey: string) => {
@@ -337,6 +344,9 @@ function App() {
       <section className="app-controls">
         <button className="solve-button" disabled={isSolving} onClick={() => void handleSolve()} type="button">
           {isSolving ? 'Solving…' : 'Solve'}
+        </button>
+        <button className="clear-button" onClick={handleClearBoard} type="button">
+          Clear board
         </button>
       </section>
       {solveMessage ? <p className="solve-message" role="status">{solveMessage}</p> : null}
