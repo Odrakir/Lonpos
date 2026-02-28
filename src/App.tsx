@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createBoardFromAscii } from './data/board';
 import { PIECE_DEFS } from './data/pieces';
-import { canPlace, flipShape, getOrientKey, getShapeOrientations, orientShape, type Cell } from './game/placement';
+import { canPlace, flipShape, getOrientKey, getShapeOrientations, orientShape, rotateShape90, type Cell } from './game/placement';
 import { solveBoard } from './solver';
 import { buildSolveInputFromUi, getOrientIndexForSolvedPlacement } from './solver/uiState';
 import BoardGrid from './ui/BoardGrid';
@@ -318,13 +318,11 @@ function App() {
       return;
     }
 
-    const orientations = getShapeOrientations(piece.shape);
-
-    setOrientByPieceId((current) => ({
-      ...current,
-      [pieceId]: ((current[pieceId] ?? 0) + 1) % orientations.length,
-    }));
-  }, []);
+    const currentShape = orientedShapes[pieceId] ?? orientShape(piece.shape, 0);
+    const rotatedShape = rotateShape90(currentShape);
+    const orientKey = getOrientKey(rotatedShape);
+    setPieceOrientationByKey(pieceId, orientKey);
+  }, [orientedShapes, setPieceOrientationByKey]);
 
   const handleFlipPiece = useCallback((pieceId: string) => {
     const piece = PIECE_DEFS.find((item) => item.id === pieceId);
