@@ -1,13 +1,30 @@
-import { createEmptyBoard } from './data/board';
+import { createBoardFromAscii } from './data/board';
 import BoardGrid from './ui/BoardGrid';
 
+const BOARD_ASCII = `
+..#.....#..#.....#..
+.####.########.####.
+..################..
+.##################.
+.##################.
+####################
+.##################.
+.##################.
+..################..
+.##################.
+.##################.
+####################
+.#.#####.##.#####.#.
+.....#......#.....
+`;
+
 function App() {
-  const board = createEmptyBoard();
+  const board = createBoardFromAscii(BOARD_ASCII);
 
   return (
     <main className="app">
       <h1>Lonpos Solver</h1>
-      <p className="subtitle">Architecture scaffold for board, solver, and UI modules.</p>
+      <p className="subtitle">Board loaded from ASCII input.</p>
       <BoardGrid board={board} />
     </main>
   );
