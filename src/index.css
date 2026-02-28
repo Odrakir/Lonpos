@@ -61,3 +61,87 @@ h1 {
   color: #6b7280;
   font-size: 0.95rem;
 }
+
+.builder-toggle {
+  display: flex;
+  justify-content: center;
+}
+
+.builder-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.piece-builder {
+  width: min(92vw, 760px);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.75rem;
+  text-align: left;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.piece-builder h2 {
+  margin: 0;
+  text-align: center;
+}
+
+.piece-builder-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.piece-builder-fields label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.piece-builder-fields input {
+  width: 100%;
+}
+
+.piece-builder-grid {
+  display: grid;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid #cbd5e1;
+  background: #cbd5e1;
+}
+
+.piece-builder-cell {
+  aspect-ratio: 1 / 1;
+  border: 0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.piece-builder-cell-filled {
+  background: #0ea5e9;
+}
+
+.piece-builder-meta {
+  margin: 0;
+  color: #4b5563;
+}
+
+.piece-builder-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.piece-builder-actions button {
+  padding: 0.45rem 0.75rem;
+}
+
+.piece-builder-output {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
