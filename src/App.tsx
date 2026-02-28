@@ -114,6 +114,8 @@ function App() {
   }, []);
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
+    event.preventDefault();
+
     setDragState((currentDrag) => {
       if (!currentDrag || currentDrag.pointerId !== event.pointerId) {
         return currentDrag;
@@ -236,7 +238,7 @@ function App() {
         </button>
       </section>
       {solveMessage ? <p className="solve-message" role="status">{solveMessage}</p> : null}
-      <section className="board-layout">
+      <section className="board-layout puzzle-surface">
         <BoardGrid
           board={board}
           boardRef={(node) => {

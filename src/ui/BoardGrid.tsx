@@ -51,7 +51,7 @@ function BoardGrid({
   return (
     <section aria-label="Puzzle board" className="board-wrapper">
       <div
-        className="board-grid"
+        className="board-grid puzzle-surface"
         ref={boardRef}
         role="grid"
         style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
@@ -74,6 +74,7 @@ function BoardGrid({
                   }
 
                   event.preventDefault();
+                  event.currentTarget.setPointerCapture(event.pointerId);
                   onPointerDownPlacedCell(placed.pieceId, placed.offset, event.pointerId);
                 }}
                 role="gridcell"
