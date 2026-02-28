@@ -6,6 +6,7 @@ interface PieceTrayProps {
   placedPieceIds: Set<string>;
   orientedShapes: Record<string, Cell[]>;
   onRotatePiece: (pieceId: string) => void;
+  onFlipPiece: (pieceId: string) => void;
   onStartDragFromTray: (pieceId: string, dragOffset: Cell, pointerId: number) => void;
 }
 
@@ -14,6 +15,7 @@ function PieceTray({
   placedPieceIds,
   orientedShapes,
   onRotatePiece,
+  onFlipPiece,
   onStartDragFromTray,
 }: PieceTrayProps) {
   return (
@@ -28,14 +30,24 @@ function PieceTray({
           <article className={`piece-preview ${isPlaced ? 'piece-preview-placed' : ''}`} key={piece.id}>
             <header className="piece-preview-header">
               <span>{piece.name}</span>
-              <button
-                aria-label={`Rotate ${piece.name}`}
-                disabled={isPlaced}
-                onClick={() => onRotatePiece(piece.id)}
-                type="button"
-              >
-                ↻ 90° ({orientByPieceId[piece.id] ?? 0})
-              </button>
+              <div className="piece-preview-actions">
+                <button
+                  aria-label={`Rotate ${piece.name}`}
+                  disabled={isPlaced}
+                  onClick={() => onRotatePiece(piece.id)}
+                  type="button"
+                >
+                  ↻ 90° ({orientByPieceId[piece.id] ?? 0})
+                </button>
+                <button
+                  aria-label={`Flip ${piece.name}`}
+                  disabled={isPlaced}
+                  onClick={() => onFlipPiece(piece.id)}
+                  type="button"
+                >
+                  ⇋ Flip
+                </button>
+              </div>
             </header>
 
             <div
