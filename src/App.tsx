@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createBoardFromAscii } from './data/board';
 import BoardGrid from './ui/BoardGrid';
 import PieceBuilder from './ui/PieceBuilder';
@@ -23,6 +23,10 @@ const BOARD_ASCII = `
 function App() {
   const board = createBoardFromAscii(BOARD_ASCII);
   const [isBuilderMode, setIsBuilderMode] = useState(false);
+  const isBuilderGateEnabled = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('builder') === '1';
+  }, []);
 
   return (
     <main className="app">
@@ -30,7 +34,7 @@ function App() {
       <p className="subtitle">Board loaded from ASCII input.</p>
       <BoardGrid board={board} />
 
-      {import.meta.env.DEV ? (
+      {isBuilderGateEnabled ? (
         <section className="builder-toggle">
           <label>
             <input
@@ -43,7 +47,7 @@ function App() {
         </section>
       ) : null}
 
-      {import.meta.env.DEV && isBuilderMode ? <PieceBuilder /> : null}
+      {isBuilderGateEnabled && isBuilderMode ? <PieceBuilder /> : null}
     </main>
   );
 }

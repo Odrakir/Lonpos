@@ -143,7 +143,7 @@ function PieceBuilder() {
 
   return (
     <section className="piece-builder" aria-label="Piece builder">
-      <h2>Piece Builder (Dev)</h2>
+      <h2>Piece Builder</h2>
       <div className="piece-builder-fields">
         <label>
           Piece ID
