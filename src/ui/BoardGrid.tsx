@@ -26,7 +26,7 @@ function BoardGrid({ board }: BoardGridProps) {
           )),
         )}
       </div>
-      <p className="board-dimensions">{columns} × {rows} empty grid</p>
+      <p className="board-dimensions">{columns} × {rows} board</p>
     </section>
   );
 }
