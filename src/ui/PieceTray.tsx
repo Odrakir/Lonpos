@@ -7,7 +7,13 @@ interface PieceTrayProps {
   orientedShapes: Record<string, Cell[]>;
   onRotatePiece: (pieceId: string) => void;
   onFlipPiece: (pieceId: string) => void;
-  onStartDragFromTray: (pieceId: string, dragOffset: Cell, pointerId: number) => void;
+  onStartDragFromTray: (
+    pieceId: string,
+    dragOffset: Cell,
+    pointerId: number,
+    clientX: number,
+    clientY: number,
+  ) => void;
 }
 
 function PieceTray({
@@ -67,9 +73,7 @@ function PieceTray({
                       return;
                     }
 
-                    event.preventDefault();
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    onStartDragFromTray(piece.id, [row, column], event.pointerId);
+                    onStartDragFromTray(piece.id, [row, column], event.pointerId, event.clientX, event.clientY);
                   }}
                   style={{
                     backgroundColor: piece.color,
