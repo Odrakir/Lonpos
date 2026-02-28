@@ -35,7 +35,13 @@ interface DragState {
   pieceId: string;
   offset: Cell;
   pointerId: number;
+  source: 'tray' | 'board';
+  startClientX: number;
+  startClientY: number;
+  isDragging: boolean;
 }
+
+const DRAG_THRESHOLD_PX = 8;
 
 function App() {
   const board = useMemo(() => createBoardFromAscii(BOARD_ASCII), []);
@@ -101,25 +107,48 @@ function App() {
     return [row - offset[0], column - offset[1]];
   }, [board]);
 
-  const startDrag = useCallback((pieceId: string, offset: Cell, pointerId: number, source: 'tray' | 'board') => {
-    setDragState({ pieceId, offset, pointerId });
-
-    if (source === 'board') {
-      setPlacedByPieceId((current) => {
-        const next = { ...current };
-        delete next[pieceId];
-        return next;
-      });
-    }
+  const startDrag = useCallback((
+    pieceId: string,
+    offset: Cell,
+    pointerId: number,
+    source: 'tray' | 'board',
+    startClientX: number,
+    startClientY: number,
+  ) => {
+    setDragState({
+      pieceId,
+      offset,
+      pointerId,
+      source,
+      startClientX,
+      startClientY,
+      isDragging: false,
+    });
   }, []);
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
-    event.preventDefault();
-
     setDragState((currentDrag) => {
       if (!currentDrag || currentDrag.pointerId !== event.pointerId) {
         return currentDrag;
       }
+
+      const travelX = event.clientX - currentDrag.startClientX;
+      const travelY = event.clientY - currentDrag.startClientY;
+      const traveledEnough = Math.hypot(travelX, travelY) >= DRAG_THRESHOLD_PX;
+
+      if (!currentDrag.isDragging && !traveledEnough) {
+        return currentDrag;
+      }
+
+      if (!currentDrag.isDragging && currentDrag.source === 'board') {
+        setPlacedByPieceId((current) => {
+          const next = { ...current };
+          delete next[currentDrag.pieceId];
+          return next;
+        });
+      }
+
+      event.preventDefault();
 
       const anchor = resolveAnchor(event.clientX, event.clientY, currentDrag.offset);
       const shape = orientedShapes[currentDrag.pieceId] ?? [];
@@ -133,7 +162,7 @@ function App() {
       const cells = placement ?? shape.map(([row, column]) => [anchor[0] + row, anchor[1] + column] as Cell);
       setGhostPreview({ cells, isValid: placement !== null });
 
-      return currentDrag;
+      return currentDrag.isDragging ? currentDrag : { ...currentDrag, isDragging: true };
     });
   }, [board, occupied, orientedShapes, resolveAnchor]);
 
@@ -141,6 +170,11 @@ function App() {
     setDragState((currentDrag) => {
       if (!currentDrag || currentDrag.pointerId !== event.pointerId) {
         return currentDrag;
+      }
+
+      if (!currentDrag.isDragging) {
+        setGhostPreview(null);
+        return null;
       }
 
       const shape = orientedShapes[currentDrag.pieceId] ?? [];
@@ -176,6 +210,14 @@ function App() {
       window.removeEventListener('pointerup', handlePointerUp);
     };
   }, [dragState, handlePointerMove, handlePointerUp]);
+
+  useEffect(() => {
+    document.body.classList.toggle('dragging', Boolean(dragState?.isDragging));
+
+    return () => {
+      document.body.classList.remove('dragging');
+    };
+  }, [dragState]);
 
   const handleSolve = useCallback(async () => {
     setSolveMessage(null);
@@ -238,15 +280,15 @@ function App() {
         </button>
       </section>
       {solveMessage ? <p className="solve-message" role="status">{solveMessage}</p> : null}
-      <section className="board-layout puzzle-surface">
+      <section className="board-layout">
         <BoardGrid
           board={board}
           boardRef={(node) => {
             boardElementRef.current = node;
           }}
           ghostPreview={ghostPreview}
-          onPointerDownPlacedCell={(pieceId, offset, pointerId) => {
-            startDrag(pieceId, offset, pointerId, 'board');
+          onPointerDownPlacedCell={(pieceId, offset, pointerId, clientX, clientY) => {
+            startDrag(pieceId, offset, pointerId, 'board', clientX, clientY);
           }}
           placedPieces={placedByPieceId}
         />
@@ -257,8 +299,8 @@ function App() {
               [pieceId]: ((current[pieceId] ?? 0) + 1) % 4,
             }))
           }
-          onStartDragFromTray={(pieceId, offset, pointerId) => {
-            startDrag(pieceId, offset, pointerId, 'tray');
+          onStartDragFromTray={(pieceId, offset, pointerId, clientX, clientY) => {
+            startDrag(pieceId, offset, pointerId, 'tray', clientX, clientY);
           }}
           orientByPieceId={orientByPieceId}
           orientedShapes={orientedShapes}
