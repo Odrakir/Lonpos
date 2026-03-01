@@ -53,6 +53,7 @@ function App() {
   const [isSolving, setIsSolving] = useState(false);
   const [solveMessage, setSolveMessage] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dragPointerPosition, setDragPointerPosition] = useState<{ clientX: number; clientY: number } | null>(null);
   const [ghostPreview, setGhostPreview] = useState<{ cells: Cell[]; isValid: boolean } | null>(null);
   const boardElementRef = useRef<HTMLDivElement | null>(null);
 
@@ -111,10 +112,15 @@ function App() {
     pieceId: string,
     offset: Cell,
     pointerId: number,
+    pointerType: string,
     source: 'tray' | 'board',
     startClientX: number,
     startClientY: number,
   ) => {
+    if (source === 'tray' && pointerType === 'touch') {
+      boardElementRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     setDragState({
       pieceId,
       offset,
@@ -124,6 +130,7 @@ function App() {
       startClientY,
       isDragging: false,
     });
+    setDragPointerPosition({ clientX: startClientX, clientY: startClientY });
   }, []);
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
@@ -131,6 +138,8 @@ function App() {
       if (!currentDrag || currentDrag.pointerId !== event.pointerId) {
         return currentDrag;
       }
+
+      setDragPointerPosition({ clientX: event.clientX, clientY: event.clientY });
 
       const deltaX = event.clientX - currentDrag.startClientX;
       const deltaY = event.clientY - currentDrag.startClientY;
@@ -184,6 +193,7 @@ function App() {
 
       if (!currentDrag.isDragging) {
         setGhostPreview(null);
+        setDragPointerPosition(null);
         return null;
       }
 
@@ -203,6 +213,7 @@ function App() {
       }
 
       setGhostPreview(null);
+      setDragPointerPosition(null);
       return null;
     });
   }, [board, occupied, orientedShapes, resolveAnchor]);
@@ -288,8 +299,41 @@ function App() {
     setPlacedByPieceId({});
     setGhostPreview(null);
     setDragState(null);
+    setDragPointerPosition(null);
     setSolveMessage(null);
   }, []);
+
+  const dragPreview = useMemo(() => {
+    if (!dragState?.isDragging || !dragPointerPosition) {
+      return null;
+    }
+
+    const piece = PIECE_DEFS.find((item) => item.id === dragState.pieceId);
+    const shape = orientedShapes[dragState.pieceId] ?? [];
+
+    if (!piece || shape.length === 0) {
+      return null;
+    }
+
+    const rows = Math.max(...shape.map(([row]) => row), 0) + 1;
+    const columns = Math.max(...shape.map(([, column]) => column), 0) + 1;
+    const previewCellSize = 14;
+    const previewGap = 2;
+    const previewUnit = previewCellSize + previewGap;
+
+    return {
+      pieceId: dragState.pieceId,
+      color: piece.color,
+      shape,
+      rows,
+      columns,
+      style: {
+        left: dragPointerPosition.clientX - dragState.offset[1] * previewUnit,
+        top: dragPointerPosition.clientY - dragState.offset[0] * previewUnit,
+      },
+      previewCellSize,
+    };
+  }, [dragPointerPosition, dragState, orientedShapes]);
 
 
 
@@ -355,16 +399,16 @@ function App() {
             boardElementRef.current = node;
           }}
           ghostPreview={ghostPreview}
-          onPointerDownPlacedCell={(pieceId, offset, pointerId, clientX, clientY) => {
-            startDrag(pieceId, offset, pointerId, 'board', clientX, clientY);
+          onPointerDownPlacedCell={(pieceId, offset, pointerId, pointerType, clientX, clientY) => {
+            startDrag(pieceId, offset, pointerId, pointerType, 'board', clientX, clientY);
           }}
           placedPieces={placedByPieceId}
         />
         <PieceTray
           onFlipPiece={handleFlipPiece}
           onRotatePiece={handleRotatePiece}
-          onStartDragFromTray={(pieceId, offset, pointerId, clientX, clientY) => {
-            startDrag(pieceId, offset, pointerId, 'tray', clientX, clientY);
+          onStartDragFromTray={(pieceId, offset, pointerId, pointerType, clientX, clientY) => {
+            startDrag(pieceId, offset, pointerId, pointerType, 'tray', clientX, clientY);
           }}
           orientByPieceId={orientByPieceId}
           orientedShapes={orientedShapes}
@@ -386,6 +430,31 @@ function App() {
       ) : null}
 
       {isBuilderGateEnabled && isBuilderMode ? <PieceBuilder /> : null}
+
+      {dragPreview ? (
+        <div
+          aria-hidden="true"
+          className="drag-piece-preview"
+          style={{
+            left: `${dragPreview.style.left}px`,
+            top: `${dragPreview.style.top}px`,
+            gridTemplateColumns: `repeat(${dragPreview.columns}, ${dragPreview.previewCellSize}px)`,
+            gridTemplateRows: `repeat(${dragPreview.rows}, ${dragPreview.previewCellSize}px)`,
+          }}
+        >
+          {dragPreview.shape.map(([row, column]) => (
+            <span
+              className="drag-piece-preview-cell"
+              key={`${dragPreview.pieceId}-drag-preview-${row}-${column}`}
+              style={{
+                backgroundColor: dragPreview.color,
+                gridColumnStart: column + 1,
+                gridRowStart: row + 1,
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
     </main>
   );
 }

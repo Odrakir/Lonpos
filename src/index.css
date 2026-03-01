@@ -221,6 +221,22 @@ body.dragging {
   overflow: hidden;
 }
 
+
+.drag-piece-preview {
+  position: fixed;
+  display: grid;
+  gap: 2px;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.88;
+}
+
+.drag-piece-preview-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+
 .board-layout {
   display: grid;
   gap: 1rem;
