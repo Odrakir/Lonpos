@@ -22,6 +22,7 @@ interface BoardGridProps {
     pieceId: string,
     offset: Cell,
     pointerId: number,
+    pointerType: string,
     clientX: number,
     clientY: number,
   ) => void;
@@ -79,7 +80,7 @@ function BoardGrid({
                     return;
                   }
 
-                  onPointerDownPlacedCell(placed.pieceId, placed.offset, event.pointerId, event.clientX, event.clientY);
+                  onPointerDownPlacedCell(placed.pieceId, placed.offset, event.pointerId, event.pointerType, event.clientX, event.clientY);
                 }}
                 role="gridcell"
                 style={placed ? { backgroundColor: placed.color } : undefined}

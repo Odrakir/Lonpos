@@ -11,6 +11,7 @@ interface PieceTrayProps {
     pieceId: string,
     dragOffset: Cell,
     pointerId: number,
+    pointerType: string,
     clientX: number,
     clientY: number,
   ) => void;
@@ -73,7 +74,7 @@ function PieceTray({
                       return;
                     }
 
-                    onStartDragFromTray(piece.id, [row, column], event.pointerId, event.clientX, event.clientY);
+                    onStartDragFromTray(piece.id, [row, column], event.pointerId, event.pointerType, event.clientX, event.clientY);
                   }}
                   style={{
                     backgroundColor: piece.color,
