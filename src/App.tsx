@@ -337,7 +337,7 @@ function App() {
   }, [orientedShapes, setPieceOrientationByKey]);
   return (
     <main className="app">
-      <h1>Lonpos Solver</h1>
+      <h1>Lonpos Cosmic Creature Solver</h1>
       <p className="subtitle">Board loaded from ASCII input.</p>
       <section className="app-controls">
         <button className="solve-button" disabled={isSolving} onClick={() => void handleSolve()} type="button">
