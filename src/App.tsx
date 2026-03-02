@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createBoardFromAscii } from './data/board';
 import { PIECE_DEFS } from './data/pieces';
 import { canPlace, flipShape, getOrientKey, getShapeOrientations, orientShape, rotateShape90, type Cell } from './game/placement';
@@ -449,6 +449,28 @@ function App() {
 
   const isShowingDragControls = dragState?.isDragging && isCoarsePointer;
 
+  const handleRotateControlPointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!dragState) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    handleRotatePiece(dragState.pieceId);
+    transformDragOffset(dragState.pieceId, ([row, column]) => [column, -row]);
+  }, [dragState, handleRotatePiece, transformDragOffset]);
+
+  const handleFlipControlPointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!dragState) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    handleFlipPiece(dragState.pieceId);
+    transformDragOffset(dragState.pieceId, ([row, column]) => [row, -column]);
+  }, [dragState, handleFlipPiece, transformDragOffset]);
+
   return (
     <main className="app">
       <h1>Lonpos Cosmic Creature Solver</h1>
@@ -484,16 +506,10 @@ function App() {
 
       {isShowingDragControls ? (
         <div className="drag-mobile-controls" role="group" aria-label="Dragged piece controls">
-          <button onClick={() => {
-            handleRotatePiece(dragState.pieceId);
-            transformDragOffset(dragState.pieceId, ([row, column]) => [column, -row]);
-          }} type="button">
+          <button onPointerDown={handleRotateControlPointerDown} type="button">
             Rotate (R)
           </button>
-          <button onClick={() => {
-            handleFlipPiece(dragState.pieceId);
-            transformDragOffset(dragState.pieceId, ([row, column]) => [row, -column]);
-          }} type="button">
+          <button onPointerDown={handleFlipControlPointerDown} type="button">
             Flip (F)
           </button>
         </div>
