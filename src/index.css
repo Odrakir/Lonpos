@@ -28,11 +28,6 @@ h1 {
   font-size: 2rem;
 }
 
-.subtitle {
-  margin: 0;
-  color: #4b5563;
-}
-
 .app-controls {
   display: flex;
   justify-content: center;
@@ -273,18 +268,28 @@ body.dragging {
 }
 
 
-.piece-preview-actions {
+
+.drag-mobile-controls {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
   display: inline-flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  padding: 0.45rem;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.86);
+  z-index: 1200;
 }
 
-.piece-preview-header button {
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  border-radius: 0.35rem;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.75rem;
-  cursor: pointer;
+.drag-mobile-controls button {
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .piece-preview-grid {
