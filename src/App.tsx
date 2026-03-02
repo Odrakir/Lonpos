@@ -55,6 +55,7 @@ function App() {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dragPointerPosition, setDragPointerPosition] = useState<{ clientX: number; clientY: number } | null>(null);
   const [ghostPreview, setGhostPreview] = useState<{ cells: Cell[]; isValid: boolean } | null>(null);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const boardElementRef = useRef<HTMLDivElement | null>(null);
 
   const isBuilderGateEnabled = useMemo(() => {
@@ -379,10 +380,78 @@ function App() {
     const orientKey = getOrientKey(flippedShape);
     setPieceOrientationByKey(pieceId, orientKey);
   }, [orientedShapes, setPieceOrientationByKey]);
+
+  const transformDragOffset = useCallback((pieceId: string, transformCell: (cell: Cell) => Cell) => {
+    const shape = orientedShapes[pieceId] ?? [];
+    if (shape.length === 0) {
+      return;
+    }
+
+    setDragState((current) => {
+      if (!current || current.pieceId !== pieceId) {
+        return current;
+      }
+
+      const transformedShape = shape.map((cell) => transformCell(cell));
+      const transformedOffset = transformCell(current.offset);
+      const minRow = Math.min(...transformedShape.map(([row]) => row));
+      const minColumn = Math.min(...transformedShape.map(([, column]) => column));
+
+      return {
+        ...current,
+        offset: [transformedOffset[0] - minRow, transformedOffset[1] - minColumn],
+      };
+    });
+  }, [orientedShapes]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(pointer: coarse)');
+    const syncMediaQuery = () => {
+      setIsCoarsePointer(mediaQuery.matches);
+    };
+
+    syncMediaQuery();
+    mediaQuery.addEventListener('change', syncMediaQuery);
+    return () => {
+      mediaQuery.removeEventListener('change', syncMediaQuery);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!dragState?.isDragging) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      if (key === 'r') {
+        handleRotatePiece(dragState.pieceId);
+        transformDragOffset(dragState.pieceId, ([row, column]) => [column, -row]);
+      } else if (key === 'f') {
+        handleFlipPiece(dragState.pieceId);
+        transformDragOffset(dragState.pieceId, ([row, column]) => [row, -column]);
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dragState, handleFlipPiece, handleRotatePiece, transformDragOffset]);
+
+  const isShowingDragControls = dragState?.isDragging && isCoarsePointer;
+
   return (
     <main className="app">
       <h1>Lonpos Cosmic Creature Solver</h1>
-      <p className="subtitle">Board loaded from ASCII input.</p>
       <section className="app-controls">
         <button className="solve-button" disabled={isSolving} onClick={() => void handleSolve()} type="button">
           {isSolving ? 'Solving…' : 'Solve'}
@@ -405,16 +474,30 @@ function App() {
           placedPieces={placedByPieceId}
         />
         <PieceTray
-          onFlipPiece={handleFlipPiece}
-          onRotatePiece={handleRotatePiece}
           onStartDragFromTray={(pieceId, offset, pointerId, pointerType, clientX, clientY) => {
             startDrag(pieceId, offset, pointerId, pointerType, 'tray', clientX, clientY);
           }}
-          orientByPieceId={orientByPieceId}
           orientedShapes={orientedShapes}
           placedPieceIds={new Set(Object.keys(placedByPieceId))}
         />
       </section>
+
+      {isShowingDragControls ? (
+        <div className="drag-mobile-controls" role="group" aria-label="Dragged piece controls">
+          <button onClick={() => {
+            handleRotatePiece(dragState.pieceId);
+            transformDragOffset(dragState.pieceId, ([row, column]) => [column, -row]);
+          }} type="button">
+            Rotate (R)
+          </button>
+          <button onClick={() => {
+            handleFlipPiece(dragState.pieceId);
+            transformDragOffset(dragState.pieceId, ([row, column]) => [row, -column]);
+          }} type="button">
+            Flip (F)
+          </button>
+        </div>
+      ) : null}
 
       {isBuilderGateEnabled ? (
         <section className="builder-toggle">
